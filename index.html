@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE MOST USELESS BUTTON EVER</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <!-- Heatmap.js -->
+    <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+    <style>
+        :root {
+            --useless-red: #ff4757;
+            --useless-pink: #ff6b81;
+            --useless-yellow: #fffa65;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease;
+        }
+        
+        #click-heatmap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.7;
+            z-index: 1;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 3rem;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        
+        #useless-button {
+            background: var(--useless-red);
+            color: white;
+            border: none;
+            padding: 30px 60px;
+            font-size: 2rem;
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            margin: 30px 0;
+            position: relative;
+            z-index: 3;
+        }
+        
+        #useless-button:hover {
+            transform: scale(1.05) rotate(2deg);
+            background: var(--useless-pink);
+        }
+        
+        #useless-button:active {
+            transform: scale(0.95) rotate(-5deg);
+        }
+        
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .stat-box {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            min-width: 200px;
+        }
+        
+        .stat-title {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--useless-red);
+        }
+        
+        #leaderboard {
+            width: 100%;
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .leaderboard-header {
+            background: var(--useless-red);
+            color: white;
+            padding: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .leaderboard-entry:nth-child(odd) {
+            background: #f9f9f9;
+        }
+        
+        #click-velocity {
+            width: 100%;
+            height: 200px;
+            margin: 40px 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .velocity-bar {
+            position: absolute;
+            bottom: 0;
+            background: var(--useless-pink);
+            width: 20px;
+            transition: height 0.3s;
+        }
+        
+        #monetization {
+            background: gold;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 40px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .ad-space {
+            width: 100%;
+            height: 250px;
+            background: #eee;
+            border: 2px dashed #999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Heatmap Canvas -->
+    <div id="click-heatmap"></div>
+    
+    <div class="content">
+        <h1>THE MOST USELESS BUTTON 2.0</h1>
+        <p>Now with 100% more useless analytics!</p>
+        
+        <button id="useless-button">CLICK ME (FOR NOTHING)</button>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-title">Your Useless Clicks</div>
+                <div class="stat-value" id="user-clicks">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Global Uselessness</div>
+                <div class="stat-value" id="global-clicks">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Your Click Speed</div>
+                <div class="stat-value" id="click-speed">0 CPS</div>
+            </div>
+        </div>
+        
+        <div id="leaderboard">
+            <div class="leaderboard-header">
+                <i class="fas fa-trophy"></i> MOST USELESS NATIONS
+            </div>
+            <div id="leaderboard-entries">
+                <div class="leaderboard-entry">
+                    <span>Loading...</span>
+                    <span>0 clicks</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2><i class="fas fa-tachometer-alt"></i> CLICK VELOCITY</h2>
+        <div id="click-velocity"></div>
+        
+        <div id="monetization">
+            <h2><i class="fas fa-dollar-sign"></i> MAKE THIS EVEN MORE USELESS!</h2>
+            <p>Upgrade to <b>Useless Premium™</b> for $9.99/month and get:</p>
+            <ul style="text-align: left;">
+                <li>A SECOND useless button</li>
+                <li>Fake VIP status</li>
+                <li>Exclusive nothingness</li>
+            </ul>
+            <button id="premium-btn" style="background:black;color:white;border:none;padding:15px 30px;border-radius:50px;margin-top:20px;font-size:1.2rem;cursor:pointer;">
+                UPGRADE TO NOTHING
+            </button>
+            
+            <div class="ad-space">
+                [This space intentionally left blank]
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================
+        // FIREBASE SETUP
+        // =====================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // =====================
+        // HEATMAP SETUP
+        // =====================
+        const heatmapInstance = h337.create({
+            container: document.getElementById('click-heatmap'),
+            radius: 50,
+            maxOpacity: 0.8,
+            minOpacity: 0,
+            blur: 0.9,
+            gradient: {
+                '0.4': 'blue',
+                '0.6': 'cyan',
+                '0.7': 'lime',
+                '0.8': 'yellow',
+                '1.0': 'red'
+            }
+        });
+        
+        // =====================
+        // BACKGROUND COLOR CHANGER
+        // =====================
+        const colors = [
+            '#FF5733', '#33FF57', '#3357FF', '#F333FF', 
+            '#FF33F3', '#33FFF5', '#F5FF33', '#FF8C33',
+            '#8C33FF', '#33FF8C', '#FF338C', '#33FF33'
+        ];
+        
+        function changeBackgroundColor() {
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            document.body.style.backgroundColor = randomColor;
+        }
+        
+        // =====================
+        // CLICK TRACKING
+        // =====================
+        let userClicks = 0;
+        let globalClicks = 0;
+        let lastClickTime = 0;
+        let clickSpeeds = [];
+        let clickPositions = [];
+        
+        // Generate random user ID
+        const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        
+        // Detect country (fake for demo)
+        const countries = ['USA', 'India', 'UK', 'Canada', 'Australia', 'Germany', 'Japan', 'Brazil'];
+        const userCountry = countries[Math.floor(Math.random() * countries.length)];
+        
+        // Track click in Firebase
+        function trackClick(x, y, speed) {
+            userClicks++;
+            
+            // Update UI
+            document.getElementById('user-clicks').textContent = userClicks;
+            
+            // Update global clicks
+            database.ref('clicks/global').transaction((current) => {
+                return (current || 0) + 1;
+            });
+            
+            // Update user clicks
+            database.ref('clicks/users/' + userId).set({
+                count: userClicks,
+                country: userCountry,
+                lastClick: Date.now()
+            });
+            
+            // Update country stats
+            database.ref('countries/' + userCountry).transaction((current) => {
+                return (current || 0) + 1;
+            });
+            
+            // Store click speed
+            if (speed > 0) {
+                clickSpeeds.push(speed);
+                if (clickSpeeds.length > 10) clickSpeeds.shift();
+                updateVelocityGraph();
+            }
+            
+            // Add to heatmap
+            heatmapInstance.addData({
+                x: x,
+                y: y,
+                value: 1
+            });
+            
+            // Change background color
+            changeBackgroundColor();
+        }
+        
+        // =====================
+        // LEADERBOARD
+        // =====================
+        function updateLeaderboard() {
+            database.ref('countries').orderByValue().limitToLast(5).once('value', (snapshot) => {
+                const countries = snapshot.val();
+                const leaderboard = document.getElementById('leaderboard-entries');
+                leaderboard.innerHTML = '';
+                
+                Object.entries(countries).sort((a, b) => b[1] - a[1]).forEach(([country, clicks]) => {
+                    const entry = document.createElement('div');
+                    entry.className = 'leaderboard-entry';
+                    entry.innerHTML = `
+                        <span>${country}</span>
+                        <span>${clicks.toLocaleString()} useless clicks</span>
+                    `;
+                    leaderboard.appendChild(entry);
+                });
+            });
+        }
+        
+        // =====================
+        // CLICK VELOCITY GRAPH
+        // =====================
+        function updateVelocityGraph() {
+            const container = document.getElementById('click-velocity');
+            container.innerHTML = '';
+            
+            // Calculate average speed
+            const avgSpeed = clickSpeeds.reduce((a, b) => a + b, 0) / clickSpeeds.length;
+            document.getElementById('click-speed').textContent = avgSpeed.toFixed(1) + ' CPS';
+            
+            // Create bars
+            clickSpeeds.forEach((speed, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'velocity-bar';
+                bar.style.left = `${i * 30 + 20}px`;
+                bar.style.height = `${Math.min(speed * 20, 180)}px`;
+                container.appendChild(bar);
+            });
+        }
+        
+        // =====================
+        // BUTTON CLICK HANDLER
+        // =====================
+        document.getElementById('useless-button').addEventListener('click', (e) => {
+            // Calculate click speed (clicks per second)
+            const now = Date.now();
+            const speed = lastClickTime > 0 ? 1000 / (now - lastClickTime) : 0;
+            lastClickTime = now;
+            
+            // Track click position
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            trackClick(
+                e.clientX, 
+                e.clientY, 
+                speed
+            );
+            
+            // Random button text
+            const texts = [
+                "STILL NOTHING",
+                "NOPE",
+                "WHY THO?",
+                "THIS ISN'T A HYPERLINK",
+                "DEFINITELY NOT A VIRUS",
+                "CLICK AGAIN, I DARE YOU",
+                "404 PURPOSE NOT FOUND"
+            ];
+            e.target.textContent = texts[Math.floor(Math.random() * texts.length)];
+        });
+        
+        // =====================
+        // MONETIZATION
+        // =====================
+        document.getElementById('premium-btn').addEventListener('click', () => {
+            // Fake payment flow
+            const paymentWindow = window.open('', 'Payment', 'width=500,height=600');
+            paymentWindow.document.write(`
+                <html><head><title>Useless Premium</title></head>
+                <body style="font-family:Arial;padding:20px;">
+                    <h1>Useless Premium Checkout</h1>
+                    <p>You're about to pay $9.99/month for absolutely nothing!</p>
+                    <div style="border:1px solid #ccc;padding:20px;margin:20px 0;">
+                        <h3>Payment Details</h3>
+                        <p>Card Number: <input type="text" placeholder="4111 1111 1111 1111"></p>
+                        <p>Expiry: <input type="text" placeholder="MM/YY" style="width:50px;"></p>
+                        <p>CVV: <input type="text" placeholder="123" style="width:50px;"></p>
+                    </div>
+                    <button onclick="alert('Payment successful! Enjoy your nothingness!');window.close();" 
+                            style="background:green;color:white;border:none;padding:10px 20px;cursor:pointer;">
+                        PAY $9.99 FOR NOTHING
+                    </button>
+                </body></html>
+            `);
+        });
+        
+        // =====================
+        // INITIALIZE
+        // =====================
+        // Load global click count
+        database.ref('clicks/global').on('value', (snapshot) => {
+            globalClicks = snapshot.val() || 0;
+            document.getElementById('global-clicks').textContent = globalClicks.toLocaleString();
+        });
+        
+        // Update leaderboard every 10 seconds
+        updateLeaderboard();
+        setInterval(updateLeaderboard, 10000);
+        
+        // Simulate ad loading
+        setTimeout(() => {
+            document.querySelector('.ad-space').innerHTML = `
+                <img src="https://via.placeholder.com/300x250?text=YOUR+AD+HERE" 
+                     style="max-width:100%;border-radius:5px;">
+                <p style="margin-top:10px;">Advertisers: Pay us to waste your money here!</p>
+            `;
+        }, 2000);
+    </script>
+</body>
+</html>
