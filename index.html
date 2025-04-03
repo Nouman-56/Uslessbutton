@@ -464,3 +464,37 @@ const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
+<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js"></script>
+
+<script>
+  // Firebase Config (Replace with YOUR details)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",  // <-- Realtime DB ka URL
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();  // <-- Realtime DB initialize
+
+  // Track Clicks on ANY Element
+  document.addEventListener('click', (e) => {
+    const clickData = {
+      element: e.target.tagName,  // e.g., "BUTTON", "A"
+      xPosition: e.clientX,      // Mouse X position
+      yPosition: e.clientY,      // Mouse Y position
+      timestamp: Date.now()      // Current time
+    };
+
+    // Save to Realtime Database
+    database.ref('clicks').push(clickData)  // 'clicks' = DB table name
+      .then(() => console.log("Click saved to Realtime DB!"))
+      .catch(err => console.error("Error: ", err));
+  });
+</script>
